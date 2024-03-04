@@ -7,53 +7,92 @@ public class OrderLine
     private enum Trigger
     {
         Allocate,
+        UpdateOrder,
+        ApproveOrder,
         Cancel
     }
-    private enum State
+    public enum State
     {
-        Unallocated,
+        Updated,
         Allocated,
-        InsufficientInventory,
+        PartiallyAllocated,
+        Approved,
         Cancelled
     }
-    
-    private readonly StateMachine<State, Trigger> _machine;
-    private readonly StateMachine<State, Trigger>.TriggerWithParameters<bool> _allocateTrigger;
-    
-    public string? BookId { get; set; }
-    public int Ordered { get; set; }
-    public decimal Price { get; set; }
 
-    public string OrderStatus => _machine.State.ToString();
+    private readonly StateMachine<State, Trigger> _machine;
+    private readonly StateMachine<State, Trigger>.TriggerWithParameters<int> _allocateTrigger;
+    private readonly StateMachine<State, Trigger>.TriggerWithParameters<int> _updateTrigger;
+
+    public string? BookId { get; set; }
+    public int Ordered { get; private set; }
+    public int Allocated { get; set; }
+    public decimal Price { get; set; }
+    public State LineState => _machine.State;
+
+    public void UpdateOrdered(int updateQty) => _machine.Fire(_updateTrigger, updateQty);
+
+    public void Allocate(int allocQty) => _machine.Fire(_allocateTrigger, allocQty);
+
+    public void Approve() => _machine.Fire(Trigger.ApproveOrder);
+
+    public void Cancel() => _machine.Fire(Trigger.Cancel);
 
 
     public OrderLine()
     {
-        _machine = new StateMachine<State, Trigger>(State.Unallocated);
-        _allocateTrigger = _machine.SetTriggerParameters<bool>(Trigger.Allocate);
-        
-        
-        _machine.Configure(State.Unallocated)
-            .Permit(Trigger.Allocate, State.Allocated)
-            .Permit(Trigger.Allocate, State.InsufficientInventory)
-            .Permit(Trigger.Cancel, State.Cancelled);
+        _machine = new StateMachine<State, Trigger>(State.Updated);
+        _allocateTrigger = _machine.SetTriggerParameters<int>(Trigger.Allocate);
+        _updateTrigger = _machine.SetTriggerParameters<int>(Trigger.UpdateOrder);
 
+        // Initial state - New/Updated:
+        _machine.Configure(State.Updated)
+            // Allow cancelling:
+            .Permit(Trigger.Cancel, State.Cancelled)
+            // Define update trigger behavior:
+            .OnEntryFrom(_updateTrigger, OnUpdate)
+            // Allow re-update
+            .PermitReentry(Trigger.UpdateOrder)
+            // Allow allocate, set state according to the allocated amt (full or partial):
+            .PermitIf(_allocateTrigger, State.Allocated, allocated => allocated == Ordered)
+            .PermitIf(_allocateTrigger, State.PartiallyAllocated, allocated => allocated < Ordered);
+
+
+        // Partially allocated state
+        _machine.Configure(State.PartiallyAllocated)
+            // Inherit configuration from the updated state (triggers cancel, update, or allocate):
+            .SubstateOf(State.Updated)
+            // Define allocation trigger behavior
+            .OnEntryFrom(_allocateTrigger, OnAllocate)
+            // Allow re-allocation:
+            .PermitReentry(Trigger.Allocate);
+
+        // Fully-allocated state
         _machine.Configure(State.Allocated)
-            .Permit(Trigger.Cancel, State.Cancelled);
-        
+            // Inherit all from partially allocated
+            .SubstateOf(State.PartiallyAllocated)
+            // Allow approve (we are sure that Ordered == Allocated because the state = Allocated)
+            .Permit(Trigger.ApproveOrder, State.Approved);
+
     }
-    
-    
-    public OrderLine(string bookId, int ordered, decimal price)
+
+
+    public OrderLine(string bookId, int ordered, decimal price): this()
     {
         BookId = bookId;
         Ordered = ordered;
         Price = price;
-        
     }
-    
-    
-    
-    
-    
+
+
+
+    private void OnAllocate(int allocQty)
+    {
+        Allocated = allocQty;
+    }
+
+    private void OnUpdate(int updateQty)
+    {
+        Ordered = updateQty;
+    }
 }
