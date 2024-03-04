@@ -3,41 +3,48 @@
 namespace BookStore.Models;
 
 public class BookOrder
-{
-    private enum State
+{   
+    public enum State
     {
         Draft,
-        PendingInventory,
+        LinesApproved,
         InsufficientInventory,
-        PendingPayment,
-        RejectedPayment,
-        PendingShipment,
-        Returned,
+        PaymentApproved,
+        PaymentRejected,
         Delivered,
-        Cancelled,
+        Returned,
+        Cancelled
     }
-    
+
     private enum Trigger
     {
-        SubmitOrder,
-        CancelOrder,
-        InventoryCheckFail,
-        InventoryCheckSuccess,
-        ChangeOrderLines,
-        PaymentCheckFail,
-        PaymentCheckSuccess,
-        ChangePaymentInfo,
-        DeliveryCheckFail,
-        DeliveryCheckSuccess,
-        ChangeDeliveryDestination,
+        Process,
+        Cancel
     }
     
+    private readonly StateMachine<State, Trigger> _machine;
+    
     public string? OrderId { get; set; }
-    public ICollection<OrderLine> OrderLines { get; } = new List<OrderLine>();
+    public List<OrderLine> OrderLines { get; } = new();
     public PaymentInfo? PaymentInfo { get; set; }
-    private string? DeliveryDestination { get; set; }
+    public string? DeliveryDestination { get; set; }
+    public State OrderStatus => _machine.State;
 
-    private readonly StateMachine<State, Trigger> _state;
+    public void Process() => _machine?.Fire(Trigger.Process);
+    public void Cancel() => _machine?.Fire(Trigger.Cancel);
+    
+    public BookOrder()
+    {
+        _machine = new(State.Draft);
+
+        _machine.Configure(State.Draft)
+            .PermitIf(Trigger.Process, State.LinesApproved, () => OrderLines.All(ol => ol.LineState == OrderLine.State.Allocated));
+        
+        _machine.Configure(State.LinesApproved)
+            
+
+    }
+    
 }
 
 

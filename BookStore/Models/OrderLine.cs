@@ -35,13 +35,11 @@ public class OrderLine
     
     internal void Allocate(int allocQty) => _machine.Fire(_allocateTrigger, allocQty);
     internal void Cancel() => _machine.Fire(Trigger.Cancel);
+    internal void Approve() => _machine.Fire(Trigger.ApproveOrder);
     
     
     public void UpdateOrdered(int updateQty) => _machine.Fire(_updateTrigger, updateQty);
-    public void Approve() => _machine.Fire(Trigger.ApproveOrder);
     
-
-
     public OrderLine()
     {
         _machine = new StateMachine<State, Trigger>(State.Updated);

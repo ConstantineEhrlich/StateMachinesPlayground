@@ -7,5 +7,5 @@ public interface IDeliveryService
     /// </summary>
     /// <param name="deliveryDestination">Delivery destination name</param>
     /// <returns>True for successful delivery, false for fail</returns>
-    Task<bool> TryDeliveryAsync(string deliveryDestination);
+    bool TryDelivery(string deliveryDestination);
 }

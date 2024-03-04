@@ -5,22 +5,15 @@ namespace BookStore.Services.Classes;
 
 public class DeliveryService: IDeliveryService
 {
-    private static string[] _destinations = new[]
+    private readonly string[] _destinations = new[]
     {
         "Haifa",
         "Tel-Aviv",
         "Jerusalem",
     };
 
-    public DeliveryService()
+    public bool TryDelivery(string deliveryDestination)
     {
-        
-    }
-
-
-    public async Task<bool> TryDeliveryAsync(string deliveryDestination)
-    {
-        await Task.Delay(300);
         return _destinations.Contains(deliveryDestination);
     }
 }
