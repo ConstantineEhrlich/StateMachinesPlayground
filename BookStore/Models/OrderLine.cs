@@ -4,13 +4,6 @@ namespace BookStore.Models;
 
 public class OrderLine
 {
-    private enum Trigger
-    {
-        Allocate,
-        UpdateOrder,
-        ApproveOrder,
-        Cancel
-    }
     public enum State
     {
         Updated,
@@ -19,24 +12,34 @@ public class OrderLine
         Approved,
         Cancelled
     }
+    
+    private enum Trigger
+    {
+        Allocate,
+        UpdateOrder,
+        ApproveOrder,
+        Cancel
+    }
 
     private readonly StateMachine<State, Trigger> _machine;
     private readonly StateMachine<State, Trigger>.TriggerWithParameters<int> _allocateTrigger;
     private readonly StateMachine<State, Trigger>.TriggerWithParameters<int> _updateTrigger;
 
+    
     public string? BookId { get; set; }
     public int Ordered { get; private set; }
-    public int Allocated { get; set; }
+    public int Allocated { get; private set; }
     public decimal Price { get; set; }
     public State LineState => _machine.State;
-
+    
+    
+    internal void Allocate(int allocQty) => _machine.Fire(_allocateTrigger, allocQty);
+    internal void Cancel() => _machine.Fire(Trigger.Cancel);
+    
+    
     public void UpdateOrdered(int updateQty) => _machine.Fire(_updateTrigger, updateQty);
-
-    public void Allocate(int allocQty) => _machine.Fire(_allocateTrigger, allocQty);
-
     public void Approve() => _machine.Fire(Trigger.ApproveOrder);
-
-    public void Cancel() => _machine.Fire(Trigger.Cancel);
+    
 
 
     public OrderLine()
@@ -83,8 +86,6 @@ public class OrderLine
         Ordered = ordered;
         Price = price;
     }
-
-
 
     private void OnAllocate(int allocQty)
     {

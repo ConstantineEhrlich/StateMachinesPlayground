@@ -8,32 +8,45 @@ public class InventoryService: IInventoryService
 {
     private readonly ConcurrentDictionary<string, int> _inventory;
 
-    public InventoryService()
+    public InventoryService(ConcurrentDictionary<string, int> inventory)
     {
-        _inventory = InitializeInventory();
+        _inventory = inventory;
     }
     
-    public void Allocate(OrderLine order)
+    public void AllocateLine(OrderLine order)
     {
         if (order.BookId is null)
             throw new NullReferenceException($"{nameof(order.BookId)} is null!");
         
         // First return whatever is allocated already
-        AddToInventory(order.BookId, order.Allocated);
+        PutToInventory(order.BookId, order.Allocated);
         // Allocate minimum between ordered and available
         order.Allocate(Math.Min(order.Ordered, _inventory.GetOrAdd(order.BookId, _ => 0)));
         // Reduce the allocated amount from the inventory
         TakeFromInventory(order.BookId, order.Allocated);
     }
 
-    public void Cancel(OrderLine order)
+    public void CancelLine(OrderLine order)
     {
         if (order.BookId is null)
             throw new NullReferenceException($"{nameof(order.BookId)} is null!");
         
         // Return any allocated inventory
-        AddToInventory(order.BookId, order.Allocated);
+        PutToInventory(order.BookId, order.Allocated);
         order.Cancel();
+    }
+
+    public int GetItemInventory(string itemId) => _inventory.GetOrAdd(itemId, _ => 0);
+    
+    private void PutToInventory(string itemId, int addQty)
+    {
+        int currentQty = _inventory.GetOrAdd(itemId, _ => 0);
+        _inventory.AddOrUpdate(itemId, currentQty + addQty, (key, oldVal) => oldVal + addQty);
+    }
+
+    private void TakeFromInventory(string itemId, int takeQty)
+    {
+        PutToInventory(itemId, -1 * takeQty);
     }
     
     public void PrintInventory()
@@ -64,27 +77,5 @@ public class InventoryService: IInventoryService
             Console.WriteLine(format, kvp.Key, kvp.Value);
         }
     }
-
-
-    private void AddToInventory(string itemId, int addQty)
-    {
-        int currentQty = _inventory.GetOrAdd(itemId, _ => 0);
-        _inventory.AddOrUpdate(itemId, currentQty + addQty, (key, oldVal) => oldVal + addQty);
-    }
-
-    private void TakeFromInventory(string itemId, int takeQty)
-    {
-        AddToInventory(itemId, -1 * takeQty);
-    }
     
-    private static ConcurrentDictionary<string, int> InitializeInventory()
-    {
-        ConcurrentDictionary<string, int> i = new();
-        i.TryAdd("Red Book", 100);
-        i.TryAdd("Green Book", 100);
-        i.TryAdd("Blue Book", 100);
-        i.TryAdd("Black Book", 100);
-        i.TryAdd("White Book", 100);
-        return i;
-    }
 }
