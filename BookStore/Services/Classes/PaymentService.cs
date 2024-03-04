@@ -11,4 +11,9 @@ public class PaymentService: IPaymentService
         paymentInfo.BalanceAmount -= chargeAmount;
         return true;
     }
+
+    public void ReturnPayment(PaymentInfo paymentInfo, decimal returnAmount)
+    {
+        paymentInfo.BalanceAmount += returnAmount;
+    }
 }
