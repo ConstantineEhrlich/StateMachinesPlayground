@@ -31,13 +31,13 @@ public class BookOrder
 
     public void PrintOrder()
     {
-        Console.WriteLine($"Order:\t\t\t{OrderId}");
-        Console.WriteLine($"Status:\t\t\t{OrderStatus}");
+        Console.WriteLine($"Order:\t\t{OrderId}");
+        Console.WriteLine($"Status:\t\t{OrderStatus}");
         Console.WriteLine($"Destination:\t{DeliveryDestination}");
-        Console.WriteLine($"Card Id:\t\t{PaymentInfo?.CardId ?? "No card"}");
-        Console.WriteLine($"Balance:\t\t{PaymentInfo?.BalanceAmount}");
+        Console.WriteLine($"Card Id:\t{PaymentInfo?.CardId ?? "No card"}");
+        Console.WriteLine($"Balance:\t{PaymentInfo?.BalanceAmount}");
         PrintOrderLines();
-        Console.WriteLine("\n\n\n");
+        Console.WriteLine("\n");
     }
 
     private void PrintOrderLines()
