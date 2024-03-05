@@ -74,6 +74,9 @@ public class OrderLine
             .SubstateOf(State.PartiallyAllocated)
             // Allow approve (we are sure that Ordered == Allocated because the state = Allocated)
             .Permit(Trigger.ApproveOrder, State.Approved);
+        
+        _machine.Configure(State.Approved)
+            .Permit(Trigger.Cancel, State.Cancelled);
 
     }
 

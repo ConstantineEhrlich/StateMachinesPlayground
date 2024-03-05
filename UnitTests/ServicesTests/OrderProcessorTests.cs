@@ -8,9 +8,9 @@ namespace UnitTests.ServicesTests;
 [TestClass]
 public class OrderProcessorTests
 {
-    private readonly IInventoryService _inv = new InventoryService(InventoryServiceTests.DummyInventory());
-    private readonly IDeliveryService _dlv = new DeliveryService();
-    private readonly IPaymentService _pay = new PaymentService();
+    private readonly InventoryService _inv = new InventoryService(InventoryServiceTests.DummyInventory());
+    private readonly DeliveryService _dlv = new DeliveryService();
+    private readonly PaymentService _pay = new PaymentService();
 
     private static BookOrder GetOrder()
     {
@@ -29,7 +29,6 @@ public class OrderProcessorTests
         };
         return order;
     }
-
     
     [TestMethod]
     public void ProcessToLinesApproved()
@@ -40,7 +39,6 @@ public class OrderProcessorTests
         proc.Process();
         
         Assert.AreEqual(BookOrder.State.LinesApproved, order.OrderStatus);
-
     }
     
     [TestMethod]
@@ -52,7 +50,6 @@ public class OrderProcessorTests
         proc.Process();
         
         Assert.AreEqual(BookOrder.State.InsufficientInventory, order.OrderStatus);
-
     }
     
     [TestMethod]
@@ -65,7 +62,6 @@ public class OrderProcessorTests
         proc.Process(); // Still insufficient inventory
         
         Assert.AreEqual(BookOrder.State.InsufficientInventory, order.OrderStatus);
-
     }
     
     [TestMethod]
@@ -150,7 +146,6 @@ public class OrderProcessorTests
         Assert.AreEqual(BookOrder.State.Returned, order.OrderStatus);
     }
 
-    
     [TestMethod]
     public void CancelFromDraft()
     {
@@ -159,8 +154,7 @@ public class OrderProcessorTests
         proc.Cancel();
         Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
     }
-    
-    
+
     [TestMethod]
     public void CancelFromInsufficientInventory()
     {
@@ -170,21 +164,33 @@ public class OrderProcessorTests
         proc.Process();
         proc.Cancel();
         Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+        
+        // Assert inventory is returned
+        _inv.PrintInventory();
+        Assert.AreEqual(100, _inv.GetItemInventory("Red Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Green Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Blue Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Black Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("White Book"));
     }
-    
-    
+
     [TestMethod]
     public void CancelFromLinesApproved()
     {
         var order = GetOrder();
         var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
-        order.OrderLines[0].UpdateOrdered(200);
         proc.Process();
         proc.Cancel();
         Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+        
+        // Assert inventory is returned
+        _inv.PrintInventory();
+        Assert.AreEqual(100, _inv.GetItemInventory("Red Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Green Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Blue Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Black Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("White Book"));
     }
-    
-    
     
     [TestMethod]
     public void CancelFromPaymentRejected()
@@ -196,9 +202,16 @@ public class OrderProcessorTests
         proc.Process(); // To payment
         proc.Cancel();
         Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+        
+        // Assert inventory is returned
+        _inv.PrintInventory();
+        Assert.AreEqual(100, _inv.GetItemInventory("Red Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Green Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Blue Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Black Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("White Book"));
     }
-
-
+    
     [TestMethod]
     public void CancelFromPaymentApproved()
     {
@@ -208,10 +221,19 @@ public class OrderProcessorTests
         proc.Process(); // To payment
         proc.Cancel();
         Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+        
+        // Assert inventory is returned
+        _inv.PrintInventory();
+        Assert.AreEqual(100, _inv.GetItemInventory("Red Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Green Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Blue Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Black Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("White Book"));
+        
+        // Assert payment is returned
+        Assert.AreEqual(10000, order.PaymentInfo!.BalanceAmount);
     }
-
-
-
+    
     [TestMethod]
     public void CancelFromReturned()
     {
@@ -223,10 +245,19 @@ public class OrderProcessorTests
         proc.Process(); // To delivery
         proc.Cancel();
         Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+        
+        // Assert inventory is returned
+        _inv.PrintInventory();
+        Assert.AreEqual(100, _inv.GetItemInventory("Red Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Green Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Blue Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("Black Book"));
+        Assert.AreEqual(100, _inv.GetItemInventory("White Book"));
+        
+        // Assert payment is returned
+        Assert.AreEqual(10000, order.PaymentInfo!.BalanceAmount);
     }
-
-
-
+    
     [TestMethod]
     public void CancelFailFromDelivered()
     {
@@ -237,9 +268,7 @@ public class OrderProcessorTests
         proc.Process(); // To delivery
         Assert.ThrowsException<InvalidOperationException>(() => proc.Cancel());
     }
-
-
-
+    
     [TestMethod]
     public void CancelFailFromCanceled()
     {
@@ -248,7 +277,4 @@ public class OrderProcessorTests
         proc.Cancel(); // First time
         Assert.ThrowsException<InvalidOperationException>(() => proc.Cancel());
     }
-
-    
-    
 }

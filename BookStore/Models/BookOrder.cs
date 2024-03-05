@@ -9,8 +9,8 @@ public class BookOrder
     public enum State
     {
         Draft = 0,
-        InsufficientInventory = 20,
-        LinesApproved = 40,
+        LinesApproved = 20,
+        InsufficientInventory = 40,
         PaymentRejected = 60,
         PaymentApproved = 80,
         Returned = 100,

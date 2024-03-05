@@ -8,12 +8,13 @@ public class BookOrderProcessor
 {
     private readonly BookOrder _order;
     private readonly StateMachine<BookOrder.State, BookOrder.Trigger> _machine;
+    private readonly StateMachine<BookOrder.State, BookOrder.Trigger>.TriggerWithParameters<BookOrder.State> _cancelTrigger;
     private readonly IDeliveryService _delSvc;
     private readonly IPaymentService _paySvc;
     private readonly IInventoryService _invSvc;
 
     public void Process() => _machine.Fire(BookOrder.Trigger.Process);
-    public void Cancel() => _machine.Fire(BookOrder.Trigger.Cancel);
+    public void Cancel() => _machine.Fire(_cancelTrigger, _machine.State);
 
     public BookOrderProcessor(BookOrder order, IDeliveryService delSvc, IPaymentService paySvc, IInventoryService invSvc)
     {
@@ -23,6 +24,7 @@ public class BookOrderProcessor
         _order = order;
         _machine = new StateMachine<BookOrder.State, BookOrder.Trigger>(_order.OrderStatus);
         _order.Machine = _machine;
+        _cancelTrigger = _machine.SetTriggerParameters<BookOrder.State>(BookOrder.Trigger.Cancel);
 
         _machine.Configure(BookOrder.State.Draft)
             .PermitDynamic(BookOrder.Trigger.Process,
@@ -49,12 +51,12 @@ public class BookOrderProcessor
             .SubstateOf(BookOrder.State.PaymentApproved);
 
         _machine.Configure(BookOrder.State.Cancelled)
-            .OnEntry(CancelOrder);
+            .OnEntryFrom(_cancelTrigger, CancelOrder);
     }
 
-    private void CancelOrder()
+    private void CancelOrder(BookOrder.State fromState)
     {
-        switch (_machine.State)
+        switch (fromState)
         {
             case >=BookOrder.State.Delivered:
                 break; // Can't cancel delivered order
@@ -83,7 +85,11 @@ public class BookOrderProcessor
 
     private void ReturnInventory()
     {
-        _order.OrderLines.ForEach(line => _invSvc.CancelLine(line));
+        //_order.OrderLines.ForEach(line => _invSvc.CancelLine(line));
+        foreach (OrderLine line in _order.OrderLines)
+        {
+            _invSvc.CancelLine(line);
+        }
     }
     
     private decimal GetChargeAmount()
