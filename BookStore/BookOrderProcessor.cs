@@ -4,7 +4,7 @@ using Stateless;
 
 namespace BookStore;
 
-public class BookOrderProcessor
+public class BookOrderProcessor : IBookOrderProcessor
 {
     private readonly BookOrder _order;
     private readonly StateMachine<BookOrder.State, BookOrder.Trigger> _machine;
@@ -16,7 +16,7 @@ public class BookOrderProcessor
     public void Process() => _machine.Fire(BookOrder.Trigger.Process);
     public void Cancel() => _machine.Fire(_cancelTrigger, _machine.State);
 
-    public BookOrderProcessor(BookOrder order, IDeliveryService delSvc, IPaymentService paySvc, IInventoryService invSvc)
+    internal BookOrderProcessor(BookOrder order, IDeliveryService delSvc, IPaymentService paySvc, IInventoryService invSvc)
     {
         _delSvc = delSvc;
         _paySvc = paySvc;
