@@ -48,6 +48,27 @@ public class BookOrderProcessor
         _machine.Configure(BookOrder.State.Returned)
             .SubstateOf(BookOrder.State.PaymentApproved);
 
+        _machine.Configure(BookOrder.State.Cancelled)
+            .OnEntry(CancelOrder);
+    }
+
+    private void CancelOrder()
+    {
+        switch (_machine.State)
+        {
+            case >=BookOrder.State.Delivered:
+                break; // Can't cancel delivered order
+            case >=BookOrder.State.PaymentApproved:
+                // If the status is beyond "Payment approved", need to return the payment
+                ReturnPayment();
+                // Go to return inventory case
+                goto case BookOrder.State.LinesApproved;
+            case BookOrder.State.LinesApproved:
+            case >=BookOrder.State.LinesApproved:
+                // If the status is beyond "Lines approved", need to return the inventory
+                ReturnInventory();
+                break;
+        }
     }
     
     private bool TryApproveLines()
@@ -60,10 +81,28 @@ public class BookOrderProcessor
         return true;
     }
 
+    private void ReturnInventory()
+    {
+        _order.OrderLines.ForEach(line => _invSvc.CancelLine(line));
+    }
+    
+    private decimal GetChargeAmount()
+    {
+        return _order.OrderLines
+            .Where(l => l.LineState == OrderLine.State.Approved)
+            .Select(l => l.Allocated * l.Price)
+            .Sum();
+    }
     private bool TryPay()
     {
-        decimal chargeAmount = _order.OrderLines.Select(l => l.Allocated * l.Price).Sum();
-        return _order.PaymentInfo is not null && _paySvc.TryChargePayment(_order.PaymentInfo, chargeAmount);
+        return _order.PaymentInfo is not null && _paySvc.TryChargePayment(_order.PaymentInfo, GetChargeAmount());
+    }
+    
+    private void ReturnPayment()
+    {
+        if (_order.PaymentInfo is null)
+            return;
+        _paySvc.ReturnPayment(_order.PaymentInfo, GetChargeAmount());
     }
 
 

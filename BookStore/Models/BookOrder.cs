@@ -8,14 +8,14 @@ public class BookOrder
     internal enum Trigger { Process, Cancel }
     public enum State
     {
-        Draft,
-        LinesApproved,
-        InsufficientInventory,
-        PaymentApproved,
-        PaymentRejected,
-        Delivered,
-        Returned,
-        Cancelled
+        Draft = 0,
+        InsufficientInventory = 20,
+        LinesApproved = 40,
+        PaymentRejected = 60,
+        PaymentApproved = 80,
+        Returned = 100,
+        Delivered = 120,
+        Cancelled = 140
     }
    
     public string? OrderId { get; set; }

@@ -32,7 +32,7 @@ public class OrderProcessorTests
 
     
     [TestMethod]
-    public void ProcessToApprovedLines()
+    public void ProcessToLinesApproved()
     {
         var order = GetOrder();
         var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
@@ -149,5 +149,106 @@ public class OrderProcessorTests
         proc.Process(); // Still returned
         Assert.AreEqual(BookOrder.State.Returned, order.OrderStatus);
     }
+
+    
+    [TestMethod]
+    public void CancelFromDraft()
+    {
+        var order = GetOrder();
+        var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
+        proc.Cancel();
+        Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+    }
+    
+    
+    [TestMethod]
+    public void CancelFromInsufficientInventory()
+    {
+        var order = GetOrder();
+        var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
+        order.OrderLines[0].UpdateOrdered(200);
+        proc.Process();
+        proc.Cancel();
+        Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+    }
+    
+    
+    [TestMethod]
+    public void CancelFromLinesApproved()
+    {
+        var order = GetOrder();
+        var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
+        order.OrderLines[0].UpdateOrdered(200);
+        proc.Process();
+        proc.Cancel();
+        Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+    }
+    
+    
+    
+    [TestMethod]
+    public void CancelFromPaymentRejected()
+    {
+        var order = GetOrder();
+        var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
+        order.PaymentInfo!.BalanceAmount = 10;
+        proc.Process(); // To lines approved
+        proc.Process(); // To payment
+        proc.Cancel();
+        Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+    }
+
+
+    [TestMethod]
+    public void CancelFromPaymentApproved()
+    {
+        var order = GetOrder();
+        var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
+        proc.Process(); // To lines approved
+        proc.Process(); // To payment
+        proc.Cancel();
+        Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+    }
+
+
+
+    [TestMethod]
+    public void CancelFromReturned()
+    {
+        var order = GetOrder();
+        var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
+        order.DeliveryDestination = "London";
+        proc.Process(); // To lines approved
+        proc.Process(); // To payment
+        proc.Process(); // To delivery
+        proc.Cancel();
+        Assert.AreEqual(BookOrder.State.Cancelled, order.OrderStatus);
+    }
+
+
+
+    [TestMethod]
+    public void CancelFailFromDelivered()
+    {
+        var order = GetOrder();
+        var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
+        proc.Process(); // To lines approved
+        proc.Process(); // To payment
+        proc.Process(); // To delivery
+        Assert.ThrowsException<InvalidOperationException>(() => proc.Cancel());
+    }
+
+
+
+    [TestMethod]
+    public void CancelFailFromCanceled()
+    {
+        var order = GetOrder();
+        var proc = new BookOrderProcessor(order, _dlv, _pay, _inv);
+        proc.Cancel(); // First time
+        Assert.ThrowsException<InvalidOperationException>(() => proc.Cancel());
+    }
+
+    
     
 }
