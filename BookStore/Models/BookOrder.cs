@@ -48,6 +48,8 @@ public class BookOrder
             return;
         }
 
+        string hdrNum = "##";
+        int maxNumLen = 1 + Math.Min(OrderLines.Count.ToString().Length, hdrNum.Length);
         string hdrBook = "Book Name";
         int maxBookLen = 1 + Math.Max(OrderLines.Max(l => l.BookId?.Length) ?? 0, hdrBook.Length);
         string hdrQty = "Ordered";
@@ -56,15 +58,18 @@ public class BookOrder
         int maxAlcLen = 1 + Math.Max(OrderLines.Max(l => l.Allocated.ToString().Length), hdrAlc.Length);
         string hdrPrc = "Price";
         int maxPrcLen = 1 + Math.Max(OrderLines.Max(l => l.Price.ToString(CultureInfo.InvariantCulture).Length), hdrPrc.Length);
+        string hdrStat = "Status";
+        int maxStatLen = 1 + Math.Max(OrderLines.Max(l => l.LineState.ToString().Length), hdrStat.Length);
 
-        string format = $"| {{0,-{maxBookLen}}} | {{1, {maxQtyLen}}} | {{2, {maxAlcLen}}} | {{3, {maxPrcLen}}} |";
+        string format = $"| {{0,-{maxNumLen}}} | {{1,-{maxBookLen}}} | {{2, {maxQtyLen}}} | {{3, {maxAlcLen}}} | {{4, {maxPrcLen}}} | {{5, {maxStatLen}}} |";
 
-        Console.WriteLine(format, hdrBook, hdrQty, hdrAlc, hdrPrc);
-        Console.WriteLine(new string('-', maxBookLen + maxQtyLen + maxAlcLen + maxPrcLen + 13));
+        Console.WriteLine(format, hdrNum, hdrBook, hdrQty, hdrAlc, hdrPrc, hdrStat);
+        Console.WriteLine(new string('-', maxNumLen + maxBookLen + maxQtyLen + maxAlcLen + maxPrcLen + maxStatLen + 19));
 
-        foreach (OrderLine line in OrderLines)
+        for (var i = 0; i < OrderLines.Count; i++)
         {
-            Console.WriteLine(format, line.BookId, line.Ordered, line.Allocated, line.Price);
+            OrderLine line = OrderLines[i];
+            Console.WriteLine(format, i, line.BookId, line.Ordered, line.Allocated, line.Price, line.LineState);
         }
     }
     
