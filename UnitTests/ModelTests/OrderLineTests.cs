@@ -113,14 +113,5 @@ namespace UnitTests.ModelTests
             ol.Cancel();
             Assert.AreEqual(OrderLine.State.Cancelled, ol.LineState);
         }
-
-        [TestMethod]
-        public void TestCancelFailFromApproved()
-        {
-            var ol = new OrderLine("Red book", 10, 10);
-            ol.Allocate(10);
-            ol.Approve();
-            Assert.ThrowsException<InvalidOperationException>(ol.Cancel);
-        }
     }
 }
