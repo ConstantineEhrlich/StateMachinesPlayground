@@ -5,10 +5,10 @@ public class PaymentInfo
     public string CardId { get; init; }
     public decimal BalanceAmount { get; set; }
 
-    public PaymentInfo(string id, decimal balance)
+    public PaymentInfo(string cardId, decimal balanceAmount)
     {
-        CardId = id;
-        BalanceAmount = balance;
+        CardId = cardId;
+        BalanceAmount = balanceAmount;
     }
     
 }

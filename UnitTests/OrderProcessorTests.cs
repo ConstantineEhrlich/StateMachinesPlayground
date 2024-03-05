@@ -1,9 +1,9 @@
 using BookStore.Models;
 using BookStore.Services.Classes;
-using BookStore.Services.Interfaces;
+using UnitTests.ServicesTests;
 using BookOrderProcessor = BookStore.BookOrderProcessor;
 
-namespace UnitTests.ServicesTests;
+namespace UnitTests;
 
 [TestClass]
 public class OrderProcessorTests
@@ -12,7 +12,7 @@ public class OrderProcessorTests
     private readonly DeliveryService _dlv = new DeliveryService();
     private readonly PaymentService _pay = new PaymentService();
 
-    private static BookOrder GetOrder()
+    internal static BookOrder GetOrder()
     {
         BookOrder order = new()
         {

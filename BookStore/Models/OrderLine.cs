@@ -6,11 +6,11 @@ public class OrderLine
 {
     public enum State
     {
-        Updated,
-        Allocated,
-        PartiallyAllocated,
-        Approved,
-        Cancelled
+        Updated = 0,
+        PartiallyAllocated = 20,
+        Allocated = 40,
+        Approved = 60,
+        Cancelled = 80
     }
     
     private enum Trigger
