@@ -64,9 +64,7 @@ public class OrderLine
             // Inherit configuration from the updated state (triggers cancel, update, or allocate):
             .SubstateOf(State.Updated)
             // Define allocation trigger behavior
-            .OnEntryFrom(_allocateTrigger, OnAllocate)
-            // Allow re-allocation:
-            .PermitReentry(Trigger.Allocate);
+            .OnEntryFrom(_allocateTrigger, OnAllocate);
 
         // Fully-allocated state
         _machine.Configure(State.Allocated)
