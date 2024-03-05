@@ -8,7 +8,7 @@ namespace UnitTests.ServicesTests;
 [TestClass]
 public class InventoryServiceTests
 {
-    private static ConcurrentDictionary<string, int> DummyInventory()
+    internal static ConcurrentDictionary<string, int> DummyInventory()
     {
         ConcurrentDictionary<string, int> i = new();
         i.TryAdd("Red Book", 100);
