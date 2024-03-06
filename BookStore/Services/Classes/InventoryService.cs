@@ -76,6 +76,8 @@ public class InventoryService: IInventoryService
         {
             Console.WriteLine(format, kvp.Key, kvp.Value);
         }
+
+        Console.WriteLine("\n");
     }
     
 }

@@ -13,13 +13,17 @@ class Program
     {
         var sp = GetServiceProvider();
         var procFactory = sp.GetService<OrderProcessorFactory>();
+        var inv = (InventoryService)sp.GetService<IInventoryService>()!;
 
-        Console.WriteLine("\t*** Create new order ***");
+        Console.WriteLine("\t*** Initial inventory: ***");
+        inv.PrintInventory();
+        
+        Console.WriteLine("\n\t*** Create new order ***");
         var order = DemoOrder();
         var proc = procFactory!.GetProcessor(order);
         order.PrintOrder();
         
-        Console.WriteLine("\n\t*** Process order (check inventory) ***");
+        Console.WriteLine("\n\t*** Process the order => Insufficient Inventory ***");
         proc.Process();
         order.PrintOrder();
 
@@ -28,29 +32,35 @@ class Program
         order.OrderLines[2].UpdateOrdered(50);
         order.PrintOrder();
 
-        Console.WriteLine("\n\t*** Process order (approve lines) ***");
+        Console.WriteLine("\n\t*** Process the order => Lines Approved ***");
         proc.Process();
         order.PrintOrder();
         
-        Console.WriteLine("\n\t*** Process order (payment failure) ***");
+        Console.WriteLine("\n\t*** Inventory at this stage: ***");
+        inv.PrintInventory();
+        
+        Console.WriteLine("\n\t*** Process the order => Payment Rejected ***");
         proc.Process();
         order.PrintOrder();
 
-        Console.WriteLine("\n\t*** Update card balance ***");
-        order.PaymentInfo!.BalanceAmount = 10000;
+        Console.WriteLine("\n\t*** Update payment info ***");
+        order.PaymentInfo = new("Master Card", 10000);
         order.PrintOrder();
         
-        Console.WriteLine("\n\t*** Process again (payment success) ***");
+        Console.WriteLine("\n\t*** Process the order => Payment Approved ***");
         proc.Process();
         order.PrintOrder();
         
-        Console.WriteLine("\n\t*** Attempt delivery to unsupported location ***");
+        Console.WriteLine("\n\t*** Process the order => Delivery Failed ***");
         proc.Process();
         order.PrintOrder();
 
-        Console.WriteLine("\n\t*** Cancel order (and get a refund) ***");
+        Console.WriteLine("\n\t*** Cancel the order => Refund a payment ***");
         proc.Cancel();
         order.PrintOrder();
+        
+        Console.WriteLine("\n\t*** Cancel the order => Inventory returns ***");
+        inv.PrintInventory();
     }
 
 

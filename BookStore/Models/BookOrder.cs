@@ -21,7 +21,7 @@ public class BookOrder
    
     public string? OrderId { get; set; }
     public List<OrderLine> OrderLines { get; init; } = new List<OrderLine>();
-    public PaymentInfo? PaymentInfo { get; init; }
+    public PaymentInfo? PaymentInfo { get; set; }
     public string? DeliveryDestination { get; set; }
     public State OrderStatus => Machine?.State ?? State.Draft;
 
