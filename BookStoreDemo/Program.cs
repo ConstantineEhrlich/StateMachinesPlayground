@@ -11,19 +11,18 @@ class Program
 {
     public static void Main()
     {
-        var sp = GetServiceProvider();
-        var procFactory = sp.GetService<OrderProcessorFactory>();
-        var inv = (InventoryService)sp.GetService<IInventoryService>()!;
-
         Console.WriteLine("\t*** Initial inventory: ***");
-        inv.PrintInventory();
+        var serviceProvider = GetServiceProvider();
+        var inventory = (InventoryService)serviceProvider.GetService<IInventoryService>()!;
+        inventory.PrintInventory();
         
         Console.WriteLine("\n\t*** Create new order ***");
         var order = DemoOrder();
-        var proc = procFactory!.GetProcessor(order);
         order.PrintOrder();
         
         Console.WriteLine("\n\t*** Process the order => Insufficient Inventory ***");
+        var procFactory = serviceProvider.GetService<OrderProcessorFactory>();
+        var proc = procFactory!.GetProcessor(order);
         proc.Process();
         order.PrintOrder();
 
@@ -37,7 +36,7 @@ class Program
         order.PrintOrder();
         
         Console.WriteLine("\n\t*** Inventory at this stage: ***");
-        inv.PrintInventory();
+        inventory.PrintInventory();
         
         Console.WriteLine("\n\t*** Process the order => Payment Rejected ***");
         proc.Process();
@@ -60,7 +59,7 @@ class Program
         order.PrintOrder();
         
         Console.WriteLine("\n\t*** Cancel the order => Inventory returns ***");
-        inv.PrintInventory();
+        inventory.PrintInventory();
     }
 
 
