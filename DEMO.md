@@ -1,5 +1,10 @@
 # Book Order Processor Demo
 
+The following demonstrates the usage of `BookOrderProcessor` to handle book orders.
+The `Process()` and `Cancel()` methods of the order processor provide complete control
+of the order's lifecycle, and trigger `BookOrder` state transitions.
+
+
 ### 1. Initialize inventory
 To check inventory balances, request the service from the service provider:
 ```csharp
