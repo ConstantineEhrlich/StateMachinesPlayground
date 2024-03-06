@@ -5,7 +5,7 @@ The `Process()` and `Cancel()` methods of the order processor provide complete c
 over the order's lifecycle, and trigger `BookOrder` state transitions.
 
 
-### 1. Initialize inventory
+### 1. Review initial inventory
 To check inventory balances, request the service from the service provider:
 ```csharp
 var inventory = serviceProvider.GetService<IInventoryService>()!;
